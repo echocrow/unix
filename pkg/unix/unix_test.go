@@ -57,3 +57,28 @@ func TestParseString(t *testing.T) {
 		})
 	}
 }
+
+func TestParseNow(t *testing.T) {
+	tests := []struct {
+		s    string
+		locS string
+	}{
+		{"", ""},
+		{"now", ""},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.s, func(t *testing.T) {
+			t.Parallel()
+			got, gotF, err := unix.Parse(tc.s)
+			want := time.Now().Round(0)
+			accuracy := time.Second
+			minWant := want.Add(accuracy * -1)
+			maxWant := want.Add(accuracy)
+			assert.True(t, minWant.Before(got), "want time >= min threshold")
+			assert.True(t, got.Before(maxWant), "want time <= max threshold")
+			assert.Equal(t, "now", gotF)
+			assert.NoError(t, err)
+		})
+	}
+}

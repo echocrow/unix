@@ -13,6 +13,11 @@ var (
 	ErrInvalidTimeLayout = errors.New("date input format not recognized")
 )
 
+// Special UNIX parse layouts.
+const (
+	NowLayout = "now"
+)
+
 // Standard time layouts, based on Go's layout template:
 // Mon Jan 2 15:04:05 -0700 MST 2006
 var stdTimeLayouts = []string{
@@ -54,6 +59,10 @@ var timeLayout = []string{
 func Parse(
 	s string,
 ) (t time.Time, layout string, err error) {
+	if s == "" || s == NowLayout {
+		return time.Now().UTC(), NowLayout, nil
+	}
+
 	for _, layout = range stdTimeLayouts {
 		if t, err = time.Parse(layout, s); err == nil {
 			return
