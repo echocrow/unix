@@ -58,20 +58,26 @@ var timeLayout = []string{
 // time value it represents.
 func Parse(
 	s string,
+	locS string,
 ) (t time.Time, layout string, err error) {
 	if s == "" || s == NowLayout {
-		return time.Now().UTC(), NowLayout, nil
+		var loc *time.Location
+		loc, err = ParseLocation(locS)
+		if err != nil {
+			return
+		}
+		return time.Now().In(loc), NowLayout, nil
 	}
 
 	for _, layout = range stdTimeLayouts {
-		if t, err = time.Parse(layout, s); err == nil {
+		if t, err = parseInLoc(layout, s, locS); err == nil {
 			return
 		}
 	}
 
 	for _, dateL := range dateLayouts {
 		for _, timeL := range timeLayout {
-			if t, layout, err = parseDateTime(dateL, timeL, s); err == nil {
+			if t, layout, err = parseDateTime(dateL, timeL, s, locS); err == nil {
 				return
 			}
 		}
@@ -81,7 +87,7 @@ func Parse(
 	for _, dateL := range dateLayouts {
 		dateL = shortenStr(dateL)
 		for _, timeL := range timeLayout {
-			if t, layout, err = parseDateTime(dateL, timeL, ss); err == nil {
+			if t, layout, err = parseDateTime(dateL, timeL, ss, locS); err == nil {
 				return
 			}
 		}
@@ -101,16 +107,33 @@ func parseDateTime(
 	dateL string,
 	timeL string,
 	input string,
+	locS string,
 ) (t time.Time, layout string, err error) {
 	layout = strings.Trim(dateL+" "+timeL, " ")
-	if t, err = time.Parse(layout, input); err == nil {
+	if t, err = parseInLoc(layout, input, locS); err == nil {
 		return
 	}
 
 	layout = strings.Trim(timeL+" "+dateL, " ")
-	if t, err = time.Parse(layout, input); err == nil {
+	if t, err = parseInLoc(layout, input, locS); err == nil {
 		return
 	}
 
 	return time.Time{}, "", ErrInvalidTimeLayout
+}
+
+func parseInLoc(
+	f string,
+	s string,
+	locS string,
+) (time.Time, error) {
+	if locS == "" {
+		return time.Parse(f, s)
+	}
+
+	loc, err := ParseLocation(locS)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.ParseInLocation(f, s, loc)
 }
