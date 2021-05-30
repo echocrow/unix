@@ -4,6 +4,7 @@ package unix
 import (
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -15,7 +16,8 @@ var (
 
 // Special UNIX parse layouts.
 const (
-	NowLayout = "now"
+	NowLayout  = "now"
+	UnixLayout = "unix"
 )
 
 // Standard time layouts, based on Go's layout template:
@@ -61,12 +63,16 @@ func Parse(
 	locS string,
 ) (t time.Time, layout string, err error) {
 	if s == "" || s == NowLayout {
-		var loc *time.Location
-		loc, err = ParseLocation(locS)
-		if err != nil {
-			return
+		t, err := castToLoc(time.Now(), locS)
+		return t, NowLayout, err
+	}
+
+	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {
+		if ts < 0 {
+			return time.Time{}, "", ErrInvalidTimeLayout
 		}
-		return time.Now().In(loc), NowLayout, nil
+		t, err := castToLoc(time.Unix(ts, 0), locS)
+		return t, UnixLayout, err
 	}
 
 	for _, layout = range stdTimeLayouts {
@@ -136,4 +142,15 @@ func parseInLoc(
 		return time.Time{}, err
 	}
 	return time.ParseInLocation(f, s, loc)
+}
+
+func castToLoc(
+	t time.Time,
+	locS string,
+) (time.Time, error) {
+	loc, err := ParseLocation(locS)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t.In(loc), nil
 }
