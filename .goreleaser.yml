@@ -1,0 +1,33 @@
+project_name: unix
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: darwin-build
+    main: ./cmd/unix
+    env: [CGO_ENABLED=1]
+    goos: [darwin]
+    goarch: [amd64]
+
+archives:
+  - id: darwin-build
+    builds: [darwin-build]
+    replacements:
+      darwin: Darwin
+      amd64: x86_64
+
+brews:
+  - ids: [darwin-build]
+    tap:
+      owner: echocrow
+      name: homebrew-tap
+    folder: Formula
+
+    homepage: '{{ replace .GitURL ".git" "" }}'
+    description: A simple UNIX timestamp and date converter.
+    license: LGPL-3.0-or-later
+
+    test: |
+      system "#{bin}/unix", "--version"
