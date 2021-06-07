@@ -47,13 +47,13 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&opts.fromTz, "from", "z", "", flushHeredoc(`
-		Parse the input in a fixed timezone
+		parse the input in a fixed timezone;
 		e.g. "utc", "vienna", "America/New_York"
 	`))
-	cmd.Flags().StringVarP(&opts.toTz, "to", "Z", "", "Convert the time to a different timezone")
-	cmd.Flags().DurationVarP(&opts.addDur, "add", "a", 0, "Add a time offset, e.g. \"10s\", \"30m\", \"-168h\"")
+	cmd.Flags().StringVarP(&opts.toTz, "to", "Z", "", "convert the time to a different timezone")
+	cmd.Flags().DurationVarP(&opts.addDur, "add", "a", 0, "add a time offset, e.g. \"10s\", \"30m\", \"-168h\"")
 	cmd.Flags().StringVarP(&opts.toLyt, "format", "f", "", flushHeredoc(`
-		Format the time in a fixed layout
+		format the time in a fixed layout;
 		e.g. "long", "unix", "%Y-%m-%d %H:%m:%m"
 	`))
 
