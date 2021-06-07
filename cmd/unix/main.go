@@ -57,6 +57,8 @@ func NewCmd() *cobra.Command {
 		e.g. "long", "unix", "%Y-%m-%d %H:%m:%m"
 	`))
 
+	cmd.SetOut(os.Stdout)
+
 	return cmd
 }
 

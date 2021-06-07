@@ -63,12 +63,14 @@ func TestCmd(t *testing.T) {
 		tc := tc
 		t.Run(strings.Join(tc.args, " "), func(t *testing.T) {
 			t.Parallel()
-			stdout, err := executeCmd(tc.args)
+			stdout, stderr, err := executeCmd(tc.args)
 			wantOk := tc.wantOut != ""
 			if wantOk {
 				assert.Equal(t, tc.wantOut+"\n", stdout)
+				assert.Empty(t, stderr)
 				assert.NoError(t, err)
 			} else {
+				assert.NotEmpty(t, stderr)
 				assert.Error(t, err)
 			}
 		})
@@ -89,8 +91,9 @@ func TestNowCmd(t *testing.T) {
 		tc := tc
 		t.Run(strings.Join(tc.args, " "), func(t *testing.T) {
 			t.Parallel()
-			stdout, err := executeCmd(tc.args)
+			stdout, stderr, err := executeCmd(tc.args)
 			assert.Regexp(t, tsRe, stdout)
+			assert.Empty(t, stderr)
 			assert.NoError(t, err)
 		})
 	}
@@ -100,22 +103,26 @@ func TestMiscCmd(t *testing.T) {
 	tests := []struct {
 		args     []string
 		stdoutRe *regexp.Regexp
+		stderrRe *regexp.Regexp
 	}{
 		{
 			[]string{"--version"},
 			fullStdoutRe(`unix version .{0,16}`),
+			emptyRe,
 		},
 		{
 			[]string{"--help"},
 			regexp.MustCompile(`(?s)^Unix.+Usage:.+Flags:`),
+			emptyRe,
 		},
 	}
 	for _, tc := range tests {
 		tc := tc
 		t.Run(strings.Join(tc.args, " "), func(t *testing.T) {
 			t.Parallel()
-			stdout, err := executeCmd(tc.args)
+			stdout, stderr, err := executeCmd(tc.args)
 			assert.Regexp(t, tc.stdoutRe, stdout)
+			assert.Regexp(t, tc.stderrRe, stderr)
 			assert.NoError(t, err)
 		})
 	}
@@ -123,17 +130,24 @@ func TestMiscCmd(t *testing.T) {
 
 func executeCmd(
 	args []string,
-) (stdout string, err error) {
+) (stdout string, stderr string, err error) {
 	cmd := unixCmd.NewCmd()
 	cmd.SetArgs(args)
 
-	buf := new(bytes.Buffer)
-	cmd.SetOutput(buf)
+	bufOut := new(bytes.Buffer)
+	cmd.SetOut(bufOut)
+
+	bufErr := new(bytes.Buffer)
+	cmd.SetErr(bufErr)
 
 	err = cmd.Execute()
-	stdout = buf.String()
+
+	stdout = bufOut.String()
+	stderr = bufErr.String()
 	return
 }
+
+var emptyRe = regexp.MustCompile(`^$`)
 
 func fullStdoutRe(pattern string) *regexp.Regexp {
 	return regexp.MustCompile(`^` + pattern + `\n$`)
