@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"os"
@@ -10,18 +10,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// version is the version of this app set at build-time.
-var version = "0.0.0-dev"
+// Execute executes the root command.
+func Execute(
+	version string,
+	exit func(int),
+) {
+	cmd := newCmd(version)
+	if err := cmd.Execute(); err != nil {
+		exit(1)
+	}
+}
 
-type CmdOptions struct {
+type cmdOptions struct {
 	fromTz string
 	addDur time.Duration
 	toTz   string
 	toLyt  string
 }
 
-func NewCmd() *cobra.Command {
-	opts := CmdOptions{}
+func newCmd(version string) *cobra.Command {
+	opts := cmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "unix [TIME]",
@@ -62,19 +70,7 @@ func NewCmd() *cobra.Command {
 	return cmd
 }
 
-// Execute executes the root command.
-func Execute() {
-	cmd := NewCmd()
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
-	}
-}
-
-func main() {
-	Execute()
-}
-
-func run(cmd *cobra.Command, opts *CmdOptions, args []string) error {
+func run(cmd *cobra.Command, opts *cmdOptions, args []string) error {
 	timeS := ""
 	if len(args) >= 1 {
 		timeS = args[0]
@@ -82,7 +78,7 @@ func run(cmd *cobra.Command, opts *CmdOptions, args []string) error {
 	return unixCmd(cmd, opts, timeS)
 }
 
-func unixCmd(cmd *cobra.Command, opts *CmdOptions, input string) error {
+func unixCmd(cmd *cobra.Command, opts *cmdOptions, input string) error {
 	t, srcLyt, err := unix.Parse(input, opts.fromTz)
 	if err != nil {
 		return err

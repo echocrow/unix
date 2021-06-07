@@ -1,4 +1,4 @@
-package main_test
+package cmd
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	unixCmd "github.com/echocrow/unix/cmd/unix"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -131,7 +130,7 @@ func TestMiscCmd(t *testing.T) {
 func executeCmd(
 	args []string,
 ) (stdout string, stderr string, err error) {
-	cmd := unixCmd.NewCmd()
+	cmd := newCmd("test")
 	cmd.SetArgs(args)
 
 	bufOut := new(bytes.Buffer)

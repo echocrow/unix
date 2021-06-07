@@ -6,7 +6,6 @@ before:
 
 builds:
   - id: darwin-build
-    main: ./cmd/unix
     env: [CGO_ENABLED=1]
     goos: [darwin]
     goarch: [amd64]
